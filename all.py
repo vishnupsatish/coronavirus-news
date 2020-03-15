@@ -64,6 +64,7 @@ def returnimage():
         os.remove("needtodelete" + format)
 
     with Image.open("newdelete" + format) as image:
+        image.show()
         text = top_headlines["articles"][articleNo]["title"]
         length = len(text.split())
         length = len(text)
@@ -75,10 +76,12 @@ def returnimage():
             lines += 1
         offset = int((width/10))
         offset = (width - font.getsize(line)[1]*lines)/2
+        textColour = input("Enter the text colour: ")
+        os.system("killall Preview")
         for line in textwrap.wrap(text, width=int(width/fontsize*1.5)):
             #draw.text((margin, offset), line, font=font, fill="red")
             w, h = draw.textsize(line, font=font)
-            draw.text(((width - w) / 2, (offset)), line, font=font, fill="red")
+            draw.text(((width - w) / 2, (offset)), line, font=font, fill=textColour)
             offset += font.getsize(line)[1]
         image.save("image" + format)
         converted = image.convert('RGB')
@@ -95,6 +98,7 @@ def returnimage():
         returnimage()
 
 def dailystats():
+    print("Opening VLC, getting stats...")
     result = StringIO()
     sys.stdout = result
     p = subprocess.Popen(["streamlink", "https://www.youtube.com/watch?v=qgylp3Td1Bw", "best", "-Q"])  #, stdout=subprocess.PIPE)
@@ -106,8 +110,8 @@ def dailystats():
     pngIm = im.convert('RGB')
     pngIm.save('update.jpg')
     sys.stdin = old_stdin
-    post("update", "update.jpg")
     sys.stdout = old_stdout
+    post("update", "update.jpg")
 
 
 def post(type, image):
@@ -117,6 +121,7 @@ def post(type, image):
         caption = "Daily coronavirus updates."
     bot = Bot()
     f = open('account.txt','r')
+    print("Uploading to Instagram...")
     result = StringIO()
     sys.stdout = result
     sys.stdin = f
@@ -126,6 +131,8 @@ def post(type, image):
     bot.upload_photo(image,caption=caption)
     sys.stdout = old_stdout
     os.remove(image + ".REMOVE_ME")
+    print("Uploaded.")
+
 
 
 

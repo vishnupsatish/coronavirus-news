@@ -8,6 +8,7 @@ import textwrap
 import requests
 import mimetypes
 import logging
+from io import StringIO
 
 logging.disable(logging.CRITICAL)
 
@@ -61,6 +62,7 @@ def returnimage():
         os.remove("needtodelete" + format)
 
     with Image.open("newdelete" + format) as image:
+        image.show()
         text = top_headlines["articles"][articleNo]["title"]
         length = len(text.split())
         length = len(text)
@@ -72,10 +74,12 @@ def returnimage():
             lines += 1
         offset = int((width/10))
         offset = (width - font.getsize(line)[1]*lines)/2
+        textColour = input("Enter the text colour: ")
+        os.system("killall Preview")
         for line in textwrap.wrap(text, width=int(width/fontsize*1.5)):
             #draw.text((margin, offset), line, font=font, fill="red")
             w, h = draw.textsize(line, font=font)
-            draw.text(((width - w) / 2, (offset)), line, font=font, fill="red")
+            draw.text(((width - w) / 2, (offset)), line, font=font, fill=textColour)
             offset += font.getsize(line)[1]
         image.save("image" + format)
         converted = image.convert('RGB')
@@ -84,13 +88,18 @@ def returnimage():
         img_with_border.show()
         os.remove("image" + format)
     os.remove("newdelete" + format)
-    if input("Is the image okay? (y/n)") == "y":
+    if input("Is the image okay? (y/n): ") == "y":
+        os.system("killall Preview")
         post()
     else:
+        os.system("killall Preview")
         returnimage()
 
 
 def post():
+    print("Uploading to Instagram...")
+    result = StringIO()
+    sys.stdout = result
     bot = Bot()
     f = open('account.txt','r')
     sys.stdin = f
@@ -99,6 +108,8 @@ def post():
     f.close()
     bot.upload_photo("image.jpg",caption="Get more of the story at " + top_headlines["articles"][articleNo]["url"])
     os.remove("image.jpg" + ".REMOVE_ME")
+    sys.stdout = old_stdout
+    print("Uploaded.")
 
 returnimage()
 
