@@ -95,17 +95,19 @@ def returnimage():
         returnimage()
 
 def dailystats():
-    p = subprocess.Popen(["open", "index.m3u8"])
-    time.sleep(20)
+    result = StringIO()
+    sys.stdout = result
+    p = subprocess.Popen(["streamlink", "https://www.youtube.com/watch?v=qgylp3Td1Bw", "best", "-Q"])  #, stdout=subprocess.PIPE)
+    time.sleep(10)
+    open = subprocess.Popen(["open", "-a", "VLC"])
+    time.sleep(10)
     im = ImageGrab.grab(bbox=(20, 100, 2860, 1600))  # X1,Y1,X2,Y2
     os.system("killall VLC")
     pngIm = im.convert('RGB')
     pngIm.save('update.jpg')
-    f = open('account.txt', 'r')
-    sys.stdin = f
     sys.stdin = old_stdin
-    f.close()
     post("update", "update.jpg")
+    sys.stdout = old_stdout
 
 
 def post(type, image):
