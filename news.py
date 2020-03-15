@@ -25,11 +25,11 @@ account = 1
 
 def returnimage():
     counter = 0
-    print("Which one would you like to upload? Input the number.")
     for article in top_headlines["articles"]:
         print(str(counter) + ": " + article["title"])
         counter +=1
-    articleNo = int(input())
+    global articleNo
+    articleNo = int(input("Which one would you like to upload? Input the number: "))
 
     url = top_headlines["articles"][articleNo]["urlToImage"]
     response = requests.get(url)

@@ -12,7 +12,9 @@ import subprocess
 import time
 import pyscreenshot as ImageGrab
 from io import StringIO
+import pyautogui
 
+# Mute logging from streamlink and instabot
 logging.disable(logging.CRITICAL)
 
 newsapi = NewsApiClient(api_key=os.getenv("NEWS_KEY"))
@@ -26,17 +28,27 @@ old_stdout = sys.stdout
 articleNo = 0
 account = 1
 
+# Get the image with news title
+
 def returnimage():
     counter = 0
+
+    # Show all the articles and let the user select one
+
     for article in top_headlines["articles"]:
         print(str(counter) + ": " + article["title"])
         counter +=1
+    global articleNo
     articleNo = int(input("Which one would you like to upload? Input the number: "))
+
+    # Get the url of the image and its file extension
 
     url = top_headlines["articles"][articleNo]["urlToImage"]
     response = requests.get(url)
     content_type = response.headers['content-type']
     format = mimetypes.guess_extension(content_type)
+
+    # Download the image, and if it does not work, prompt the user to select another article
 
     if format == None:
         format = "." + top_headlines["articles"][articleNo]["urlToImage"][-3:]
@@ -49,6 +61,8 @@ def returnimage():
             continue
         if os.path.isfile("needtodelete" + format):
             break
+
+    # Crop the image into a square
 
     with Image.open("needtodelete" + format) as image:
         width, height = image.size
@@ -63,6 +77,8 @@ def returnimage():
         image.save("newdelete" + format)
         os.remove("needtodelete" + format)
 
+    # Add text on the image
+
     with Image.open("newdelete" + format) as image:
         image.show()
         text = top_headlines["articles"][articleNo]["title"]
@@ -72,17 +88,22 @@ def returnimage():
         fontsize = int(width/(length/8))
         font = ImageFont.truetype("Chunk.ttf", fontsize)
         lines = 0
+
         for line in textwrap.wrap(text, width=int(width / fontsize * 1.5)):
             lines += 1
-        offset = int((width/10))
+
         offset = (width - font.getsize(line)[1]*lines)/2
-        textColour = input("Enter the text colour: ")
+        textcolour = input("Enter the text colour: ")
         os.system("killall Preview")
+
+        # Wrap the text into multiple lines
         for line in textwrap.wrap(text, width=int(width/fontsize*1.5)):
             #draw.text((margin, offset), line, font=font, fill="red")
             w, h = draw.textsize(line, font=font)
-            draw.text(((width - w) / 2, (offset)), line, font=font, fill=textColour)
+            draw.text(((width - w) / 2, (offset)), line, font=font, fill=textcolour)
             offset += font.getsize(line)[1]
+
+        # Add border, and save
         image.save("image" + format)
         converted = image.convert('RGB')
         img_with_border = ImageOps.expand(converted, border=int(width/50), fill='black')
@@ -90,6 +111,8 @@ def returnimage():
         img_with_border.show()
         os.remove("image" + format)
     os.remove("newdelete" + format)
+
+    # Ask user if the image is okay. If it isn't, redo the entire process.
     if input("Is the image okay? (y/n): ") == "y":
         os.system("killall Preview")
         post("image", "image.jpg")
@@ -97,14 +120,30 @@ def returnimage():
         os.system("killall Preview")
         returnimage()
 
+# Get the stats of the virus
+
 def dailystats():
     print("Opening VLC, getting stats...")
     result = StringIO()
     sys.stdout = result
+
+    # use streamlink to get HLS stream (.m3u8) of the coronavirus live stream (with permission)
+    # Open in VLC
+
     p = subprocess.Popen(["streamlink", "https://www.youtube.com/watch?v=qgylp3Td1Bw", "best", "-Q"])  #, stdout=subprocess.PIPE)
-    time.sleep(10)
+    time.sleep(6)
+
+    # Move mouse out of the way
+
+    pyautogui.moveTo(1450, 0, duration=1)
+
+    # Place VLC in focus (front)
+
     open = subprocess.Popen(["open", "-a", "VLC"])
-    time.sleep(10)
+    time.sleep(6)
+
+    # After delaying (waiting for VLC to open), take screenshot of stats
+
     im = ImageGrab.grab(bbox=(20, 100, 2860, 1600))  # X1,Y1,X2,Y2
     os.system("killall VLC")
     pngIm = im.convert('RGB')
@@ -113,6 +152,8 @@ def dailystats():
     sys.stdout = old_stdout
     post("update", "update.jpg")
 
+
+# Post the given image to Instagram
 
 def post(type, image):
     if type == "image":
@@ -125,6 +166,9 @@ def post(type, image):
     result = StringIO()
     sys.stdout = result
     sys.stdin = f
+
+    # Use instabot to upload image
+
     bot.login()
     sys.stdin = old_stdin
     f.close()

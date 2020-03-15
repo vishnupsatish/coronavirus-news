@@ -6,6 +6,7 @@ import os
 import sys
 from io import StringIO
 import logging
+import pyautogui
 
 logging.disable(logging.CRITICAL)
 old_stdin = sys.stdin
@@ -14,9 +15,10 @@ print("Opening VLC, getting stats...")
 result = StringIO()
 sys.stdout = result
 p = subprocess.Popen(["streamlink", "https://www.youtube.com/watch?v=qgylp3Td1Bw", "best", "-Q"])
-time.sleep(10)
+time.sleep(6)
+pyautogui.moveTo(1450, 0, duration=1)
 open = subprocess.Popen(["open", "-a", "VLC"])
-time.sleep(10)
+time.sleep(6)
 im = ImageGrab.grab(bbox=(20, 100, 2860, 1600))
 os.system("killall VLC")
 pngIm = im.convert('RGB')
